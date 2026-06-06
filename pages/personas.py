@@ -38,7 +38,7 @@ with tab1:
         with col1:
             tipo_doi = st.selectbox("Tipo DOI", ["DNI", "RUC", "Pasaporte"], 
                                     index=["DNI", "RUC", "Pasaporte"].index(p['tipo_doi']) if p else 0)
-            nombre1 = st.text_input("Primer Nombre", value=limpiar(p['nombre1'] if p else ""))
+            nombre1 = st.text_input("Primer Nombre", value=limpiar(p['nombre1'] if p else ""),required=True)
             nombre2 = st.text_input("Segundo Nombre", value=limpiar(p['nombre2'] if p else ""))
             nombre3 = st.text_input("Tercer Nombre", value=limpiar(p['nombre3'] if p else ""))
         
