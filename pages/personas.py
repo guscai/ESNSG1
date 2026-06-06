@@ -1,7 +1,7 @@
 import streamlit as st
 from database import supabase
 
-st.header("👥 Gestión de Personas")
+st.header("👥 Personas")
 
 # Función auxiliar para limpiar valores None antes de ponerlos en el formulario
 def limpiar(valor):
