@@ -1,35 +1,47 @@
 import streamlit as st
-from database import insertar_persona  # Importa la función de tu archivo modular
+from database import supabase # Asegúrate de importar tu cliente configurado
 
-st.header("👥 Registrar Nueva Persona")
+st.header("👥 Gestión de Personas")
 
-with st.form("registro_persona"):
-    col1, col2 = st.columns(2)
-    with col1:
-        tipo_doi = st.selectbox("Tipo de documento", ["DNI", "RUC", "Pasaporte"])
-        nombre1 = st.text_input("Primer Nombre")
-        nombre2 = st.text_input("Segundo Nombre")
-    with col2:
-        doi = st.text_input("Número de documento")
-        apellido_paterno = st.text_input("Apellido Paterno")
-        apellido_materno = st.text_input("Apellido Materno")
+# 1. Estado inicial para manejar la edición
+if "persona_a_editar" not in st.session_state:
+    st.session_state.persona_a_editar = None
 
-    submitted = st.form_submit_button("Guardar en Supabase")
+# 2. Rectángulo Superior (Búsqueda y Formulario)
+tab1, tab2 = st.tabs(["➕ Nuevo / Editar", "🔍 Buscar para Editar"])
 
-    if submitted:
-        if nombre1 and apellido_paterno and doi:
-            data = {
-                "tipo_doi": tipo_doi,
-                "doi": doi,
-                "nombre1": nombre1,
-                "nombre2": nombre2,
-                "apellido_paterno": apellido_paterno,
-                "apellido_materno": apellido_materno
-            }
-            try:
-                insertar_persona(data)
-                st.success("¡Datos guardados correctamente!")
-            except Exception as e:
-                st.error(f"Error: {e}")
-        else:
-            st.warning("Completa los campos obligatorios.")
+with tab2:
+    query = st.text_input("Buscar por nombre o apellido:")
+    if query:
+        # Buscamos en la base de datos
+        results = supabase.table("personas").select("*").ilike("nombre_completo", f"%{query}%").execute().data
+        for p in results:
+            if st.button(f"Editar a {p['nombre_completo']}", key=p['id']):
+                st.session_state.persona_a_editar = p
+                st.rerun()
+
+with tab1:
+    # Si hay alguien en session_state, cargamos sus datos, si no, campos vacíos
+    p = st.session_state.persona_a_editar
+    
+    with st.form("form_persona", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        nombre1 = col1.text_input("Nombre", value=p['nombre1'] if p else "")
+        apellido = col2.text_input("Apellido", value=p['apellido_paterno'] if p else "")
+        
+        btn_guardar = st.form_submit_button("Guardar Cambios")
+        
+        if btn_guardar:
+            # Lógica: Si p existe, hacemos UPDATE, si no, INSERT
+            if p:
+                supabase.table("personas").update({"nombre1": nombre1}).eq("id", p['id']).execute()
+            else:
+                supabase.table("personas").insert({"nombre1": nombre1, ...}).execute()
+            st.session_state.persona_a_editar = None
+            st.rerun()
+
+# 3. Rectángulo Inferior (Tabla de registros)
+st.divider()
+st.subheader("📋 Registros Guardados")
+data = supabase.table("personas").select("*").execute().data
+st.table(data)
