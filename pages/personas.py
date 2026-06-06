@@ -2,20 +2,20 @@ import streamlit as st
 import datetime
 from database import supabase
 
-# Configuración inicial
+# 1. Configuración de página
 st.set_page_config(page_title="Gestión de Personas", layout="wide")
 st.header("👥 Gestión de Personas")
 
 def limpiar(valor):
     return valor if valor is not None else ""
 
-# Estado de la sesión
+# 2. Estado de la sesión
 if "persona_a_editar" not in st.session_state:
     st.session_state.persona_a_editar = None
 
+# 3. Navegación
 tab1, tab2 = st.tabs(["➕ Nuevo / Editar", "🔍 Buscar para Editar"])
 
-# TAB 2: BUSCAR
 with tab2:
     query = st.text_input("Buscar por nombre o apellido:")
     if query:
@@ -25,7 +25,6 @@ with tab2:
                 st.session_state.persona_a_editar = p
                 st.rerun()
 
-# TAB 1: EDITAR / CREAR
 with tab1:
     p = st.session_state.persona_a_editar
     if p:
@@ -55,16 +54,15 @@ with tab1:
                     valor_fecha = None
             f_nacimiento = st.date_input("Fecha de Nacimiento", value=valor_fecha)
         
-        col_btn1, col_btn2 = st.columns([1, 1])
-        with col_btn1:
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
             btn_guardar = st.form_submit_button("Guardar Cambios")
-        with col_btn2:
-            btn_eliminar_form = st.form_submit_button("🗑️ Eliminar Registro", type="primary") if p else None
+        with col_b2:
+            btn_eliminar = st.form_submit_button("🗑️ Eliminar Registro", type="primary") if p else None
         
-        # Guardar
         if btn_guardar:
             if not nombre1 or not apellido_paterno:
-                st.error("Primer Nombre y Apellido Paterno son obligatorios.")
+                st.error("El Primer Nombre y Apellido Paterno son obligatorios.")
             else:
                 datos = {
                     "tipo_doi": tipo_doi, "doi": doi, "nombre1": nombre1,
@@ -86,35 +84,35 @@ with tab1:
                 except Exception as e:
                     st.error(f"Error: {e}")
 
-        # Eliminar desde el formulario
-        if btn_eliminar_form and p:
+        if btn_eliminar and p:
             supabase.table("personas").delete().eq("id", p['id']).execute()
             st.session_state.persona_a_editar = None
             st.rerun()
 
-# TABLA DE ELIMINACIÓN DIRECTA
+# 4. Tabla Profesional
 st.divider()
 st.subheader("📋 Registros Guardados")
-
 registros = supabase.table("personas").select("*").execute().data
 
-for registro in registros:
-    c1, c2 = st.columns([4, 1])
-    with c1:
-        st.write(f"ID {registro['id']} | **{registro.get('nombre_completo', 'Sin nombre')}**")
-    with c2:
-        if st.button("🗑️ Borrar", key=f"del_{registro['id']}"):
-            st.session_state.confirmar_id = registro['id']
-            st.rerun()
+# Añadimos una columna 'borrar' temporal para la tabla
+for r in registros:
+    r['borrar'] = False
 
-# Lógica de confirmación
-if "confirmar_id" in st.session_state:
-    id_conf = st.session_state.confirmar_id
-    st.warning(f"¿Confirmas borrar el registro ID {id_conf}?")
-    if st.button("✅ Confirmar Borrado"):
-        supabase.table("personas").delete().eq("id", id_conf).execute()
-        del st.session_state.confirmar_id
+edited_df = st.data_editor(
+    registros,
+    column_config={
+        "id": st.column_config.NumberColumn("ID", disabled=True),
+        "borrar": st.column_config.CheckboxColumn("¿Borrar?", default=False)
+    },
+    hide_index=True,
+    use_container_width=True
+)
+
+if st.button("🗑️ Eliminar seleccionados"):
+    ids_a_borrar = [r['id'] for r in edited_df if r.get('borrar') == True]
+    if ids_a_borrar:
+        for id_b in ids_a_borrar:
+            supabase.table("personas").delete().eq("id", id_b).execute()
         st.rerun()
-    if st.button("❌ Cancelar"):
-        del st.session_state.confirmar_id
-        st.rerun()
+    else:
+        st.warning("Selecciona al menos una fila marcando el checkbox '¿Borrar?'.")
