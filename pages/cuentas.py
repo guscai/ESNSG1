@@ -11,4 +11,4 @@ configuracion = {
 }
 
 # Llama a la función genérica
-render_form_y_tabla("cuentas", configuracion)
+render_form_y_tabla("cuentas", configuracion, nombre_de_la_pagina)
