@@ -2,7 +2,10 @@ import streamlit as st
 import datetime
 from database import supabase
 
-def render_form_y_tabla(nombre_tabla, campos_config, primary_key="id"):
+def render_form_y_tabla(nombre_tabla, campos_config, titulo_pagina, primary_key="id"):
+
+    st.header(titulo_pagina)
+    
     """
     nombre_tabla: string, nombre en Supabase
     campos_config: dict {campo: tipo}, ej: {"nombre1": "text", "f_nacimiento": "date"}
