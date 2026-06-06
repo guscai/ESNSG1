@@ -1,3 +1,33 @@
+import streamlit as st
+import datetime
+from database import supabase
+
+# 1. Configuración de página (opcional, pero recomendado al inicio)
+st.set_page_config(page_title="Gestión", layout="wide")
+
+st.header("👥 Gestión de Personas")
+
+# 2. Definición de funciones
+def limpiar(valor):
+    return valor if valor is not None else ""
+
+# 3. Lógica de estado
+if "persona_a_editar" not in st.session_state:
+    st.session_state.persona_a_editar = None
+
+# 4. Navegación / UI
+tab1, tab2 = st.tabs(["➕ Nuevo / Editar", "🔍 Buscar para Editar"])
+
+with tab1:
+    # AQUÍ DEBE IR TODO TU FORMULARIO
+    p = st.session_state.persona_a_editar
+    with st.form("form_persona"):
+        # ... (aquí dentro van tus columnas, inputs y botones)
+        st.write("Formulario cargado")
+        btn = st.form_submit_button("Guardar")
+
+# ... resto del código
+
 with st.form("form_persona"):
         col1, col2 = st.columns(2)
         with col1:
