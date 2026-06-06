@@ -35,23 +35,26 @@ with tab1:
         with col1:
             tipo_doi = st.selectbox("Tipo DOI", ["DNI", "RUC", "Pasaporte"], 
                                     index=["DNI", "RUC", "Pasaporte"].index(p['tipo_doi']) if p else 0)
-            nombre1 = st.text_input("Primer Nombre", value=limpiar(p['nombre1'] if p else ""))
+            
+            # Aquí agregamos el required=True
+            nombre1 = st.text_input("Primer Nombre", value=limpiar(p['nombre1'] if p else ""), required=True)
+            
             nombre2 = st.text_input("Segundo Nombre", value=limpiar(p['nombre2'] if p else ""))
             nombre3 = st.text_input("Tercer Nombre", value=limpiar(p['nombre3'] if p else ""))
         
         with col2:
-            doi = st.text_input("Número DOI", value=limpiar(p['doi'] if p else ""))
-            apellido_paterno = st.text_input("Apellido Paterno", value=limpiar(p['apellido_paterno'] if p else ""))
+            # Aquí también
+            doi = st.text_input("Número DOI", value=limpiar(p['doi'] if p else ""), required=True)
+            
+            # Y aquí
+            apellido_paterno = st.text_input("Apellido Paterno", value=limpiar(p['apellido_paterno'] if p else ""), required=True)
             apellido_materno = st.text_input("Apellido Materno", value=limpiar(p['apellido_materno'] if p else ""))
-        
+       
         # El botón DEBE estar dentro del 'with st.form'
         btn_guardar = st.form_submit_button("Guardar Cambios")
         
         # La lógica de guardado debe estar dentro del 'with st.form'
         if btn_guardar:
-            if not nombre1 or not apellido_paterno:
-                st.error("Por favor, completa al menos el Primer Nombre y Apellido Paterno.")
-            else:
                 datos = {
                     "tipo_doi": tipo_doi, "doi": doi, "nombre1": nombre1,
                     "nombre2": nombre2 if nombre2 else None,
