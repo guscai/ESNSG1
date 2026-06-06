@@ -29,48 +29,49 @@ with tab1:
             st.session_state.persona_a_editar = None
             st.rerun()
 
-    # EL CAMBIO: Quitamos clear_on_submit=True aquí para controlar mejor el reseteo
+    # FORMULARIO
     with st.form("form_persona"):
         col1, col2 = st.columns(2)
         with col1:
-            opciones = ["DNI", "RUC", "Pasaporte"]
-            # Búsqueda segura del índice
-            idx = opciones.index(p['tipo_doi']) if (p and p['tipo_doi'] in opciones) else 0
-            tipo_doi = st.selectbox("Tipo DOI", opciones, index=idx)
-            
-            nombre1 = st.text_input("Primer Nombre", value=limpiar(p['nombre1'] if p else ""), required=True)
+            tipo_doi = st.selectbox("Tipo DOI", ["DNI", "RUC", "Pasaporte"], index=0)
+            nombre1 = st.text_input("Primer Nombre", value=limpiar(p['nombre1'] if p else ""))
             nombre2 = st.text_input("Segundo Nombre", value=limpiar(p['nombre2'] if p else ""))
             nombre3 = st.text_input("Tercer Nombre", value=limpiar(p['nombre3'] if p else ""))
         
         with col2:
-            doi = st.text_input("Número DOI", value=limpiar(p['doi'] if p else ""), required=True)
-            apellido_paterno = st.text_input("Apellido Paterno", value=limpiar(p['apellido_paterno'] if p else ""), required=True)
+            doi = st.text_input("Número DOI", value=limpiar(p['doi'] if p else ""))
+            apellido_paterno = st.text_input("Apellido Paterno", value=limpiar(p['apellido_paterno'] if p else ""))
             apellido_materno = st.text_input("Apellido Materno", value=limpiar(p['apellido_materno'] if p else ""))
         
+        # EL BOTÓN DEBE ESTAR AL MISMO NIVEL DE SANGRÍA QUE LOS COLUMNS
         btn_guardar = st.form_submit_button("Guardar Cambios")
         
+        # LÓGICA DE GUARDADO (DENTRO DEL FORM)
         if btn_guardar:
-            datos = {
-                "tipo_doi": tipo_doi, "doi": doi, "nombre1": nombre1,
-                "nombre2": nombre2 if nombre2 else None,
-                "nombre3": nombre3 if nombre3 else None,
-                "apellido_paterno": apellido_paterno,
-                "apellido_materno": apellido_materno
-            }
-            try:
-                if p:
-                    supabase.table("personas").update(datos).eq("id", p['id']).execute()
-                    st.success("¡Registro actualizado!")
-                else:
-                    supabase.table("personas").insert(datos).execute()
-                    st.success("¡Nueva persona registrada!")
+            # Validación manual en lugar de required=True para evitar errores
+            if not nombre1 or not doi or not apellido_paterno:
+                st.error("Primer Nombre, DOI y Apellido Paterno son obligatorios.")
+            else:
+                datos = {
+                    "tipo_doi": tipo_doi, "doi": doi, "nombre1": nombre1,
+                    "nombre2": nombre2 if nombre2 else None,
+                    "nombre3": nombre3 if nombre3 else None,
+                    "apellido_paterno": apellido_paterno,
+                    "apellido_materno": apellido_materno
+                }
                 
-                # Reseteo manual controlado
-                st.session_state.persona_a_editar = None
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error de base de datos: {e}")
+                try:
+                    if p:
+                        supabase.table("personas").update(datos).eq("id", p['id']).execute()
+                        st.success("¡Registro actualizado!")
+                    else:
+                        supabase.table("personas").insert(datos).execute()
+                        st.success("¡Nueva persona registrada!")
+                    
+                    st.session_state.persona_a_editar = None
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
 st.divider()
-st.subheader("📋 Registros Guardados")
 st.dataframe(supabase.table("personas").select("*").execute().data)
