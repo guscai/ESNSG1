@@ -2,7 +2,8 @@
 import streamlit as st
 from utils_forms import render_form_y_tabla
 
-st.header("👥 Gestión de Personas")
+nombre_de_la_pagina = "👥 Cuentas"
+
 
 # Define los campos de esta tabla específica
 configuracion = {
