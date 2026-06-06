@@ -64,4 +64,38 @@ with tab1:
         
         # Lógica de procesamiento
         if btn_guardar:
-            if
+            if not nombre1 or not apellido_paterno:
+                st.error("El Primer Nombre y Apellido Paterno son obligatorios.")
+            else:
+                datos = {
+                    "tipo_doi": tipo_doi, "doi": doi, "nombre1": nombre1,
+                    "nombre2": nombre2 if nombre2 else None,
+                    "nombre3": nombre3 if nombre3 else None,
+                    "apellido_paterno": apellido_paterno,
+                    "apellido_materno": apellido_materno,
+                    "f_nacimiento": str(f_nacimiento)
+                }
+                try:
+                    if p:
+                        supabase.table("personas").update(datos).eq("id", p['id']).execute()
+                        st.success("¡Registro actualizado!")
+                    else:
+                        supabase.table("personas").insert(datos).execute()
+                        st.success("¡Nueva persona registrada!")
+                    st.session_state.persona_a_editar = None
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error: {e}")
+
+        if btn_eliminar and p:
+            try:
+                supabase.table("personas").delete().eq("id", p['id']).execute()
+                st.warning("Registro eliminado correctamente.")
+                st.session_state.persona_a_editar = None
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error al eliminar: {e}")
+
+st.divider()
+st.subheader("📋 Registros Guardados")
+st.dataframe(supabase.table("personas").select("*").execute().data)
